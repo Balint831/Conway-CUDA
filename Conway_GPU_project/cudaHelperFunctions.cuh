@@ -16,15 +16,15 @@ __device__ void increaseNeighbourCount(char* neighGrid2, int y, int x, int N)
 	yabove = (y == 0) ? N - 1 : y - 1;
 	ybelow = (y == (N - 1)) ? 0 : y + 1;
 
-	neighGrid2[xleft + N * yabove] += 1;
-	neighGrid2[x + N * yabove] += 1;
+	neighGrid2[xleft + N * yabove]	+= 1;
+	neighGrid2[x + N * yabove]		+= 1;
 	neighGrid2[xright + N * yabove] += 1;
 
-	neighGrid2[xleft + N * y] += 1;
-	neighGrid2[xright + N * y] += 1;
+	neighGrid2[xleft + N * y]		+= 1;
+	neighGrid2[xright + N * y]		+= 1;
 
-	neighGrid2[xleft + N * ybelow] += 1;
-	neighGrid2[x + N * ybelow] += 1;
+	neighGrid2[xleft + N * ybelow]	+= 1;
+	neighGrid2[x + N * ybelow]		+= 1;
 	neighGrid2[xright + N * ybelow] += 1;
 }
 
@@ -39,15 +39,15 @@ __device__ void decreaseNeighbourCount(char* neighGrid2, int y, int x, int N)
 	yabove = (y == 0) ? N - 1 : y - 1;
 	ybelow = (y == (N - 1)) ? 0 : y + 1;
 
-	neighGrid2[xleft + N * yabove] -= 1;
-	neighGrid2[x + N * yabove] -= 1;
+	neighGrid2[xleft + N * yabove]	-= 1;
+	neighGrid2[x + N * yabove]		-= 1;
 	neighGrid2[xright + N * yabove] -= 1;
 
-	neighGrid2[xleft + N * y] -= 1;
-	neighGrid2[xright + N * y] -= 1;
+	neighGrid2[xleft + N * y]		-= 1;
+	neighGrid2[xright + N * y]		-= 1;
 
-	neighGrid2[xleft + N * ybelow] -= 1;
-	neighGrid2[x + N * ybelow] -= 1;
+	neighGrid2[xleft + N * ybelow]	-= 1;
+	neighGrid2[x + N * ybelow]		-= 1;
 	neighGrid2[xright + N * ybelow] -= 1;
 }
 

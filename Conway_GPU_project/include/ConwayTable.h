@@ -7,13 +7,15 @@
 class ConwayTable
 {
 private:
+
+    int N;
     std::vector<char> grid; //the cell states are registered on this grid
     std::vector<char> neighGrid; //the number of living neighbor cells
     std::vector<char> neighGrid2;
     
 
 public:
-    int N;
+    
     ConwayTable(int n, double p1); //constructor from 
     ConwayTable(int n, std::vector<char>& v); //constructor from vector
     void initNeigh(int y, int x); //initializing neighbour grid based on cell state grid
