@@ -2,8 +2,8 @@
 #include "cuda_runtime.h"
 #include "cuda.h"
 
-dim3 dimGrid(64, 64);
-dim3 dimBlock(16, 16);
+dim3 dimGrid(1, 1);
+dim3 dimBlock(6, 6);
 
 
 __device__ void increaseNeighbourCount(char* neighGrid2, int y, int x, int N)
@@ -51,6 +51,35 @@ __device__ void decreaseNeighbourCount(char* neighGrid2, int y, int x, int N)
 	neighGrid2[xright + N * ybelow] -= 1;
 }
 
+__global__ void initNeigh(int N, char* grid, char* neighGrid)
+{
+	int y = blockIdx.y * blockDim.y + threadIdx.y;
+	int x = blockIdx.x * blockDim.x + threadIdx.x;
+
+	char neighCount = 0;
+	int xleft, xright, yabove, ybelow;
+
+	//the reason for this section is that the modulo operation in C++ is a mess
+	xleft = (x == 0) ?			N - 1 : x - 1;
+	xright = (x == (N - 1)) ?	0 : x + 1;
+
+	yabove = (y == 0) ?			N - 1 : y - 1;
+	ybelow = (y == (N - 1)) ?	0 : y + 1;
+
+	neighCount += grid[N * yabove + xleft];
+	neighCount += grid[N * yabove + x];
+	neighCount += grid[N * yabove + xright];
+
+	neighCount += grid[y, xleft];
+	neighCount += grid[y, xright];
+
+	neighCount += grid[ybelow, xleft];
+	neighCount += grid[ybelow, x];
+	neighCount += grid[ybelow, xright];
+
+	neighGrid[y * N + x] = neighCount;
+}
+
 
 __global__ void oneCell(int N, char* grid, char* neighGrid, char* neighGrid2)
 {
@@ -80,11 +109,4 @@ __global__ void oneCell(int N, char* grid, char* neighGrid, char* neighGrid2)
 			}
 		}
 	}
-}
-
-void oneStep(int N, char* host_grid, char* grid, char* neighGrid, char* neighGrid2)
-{
-	oneCell<<<dimGrid, dimBlock>>>(N, grid, neighGrid, neighGrid2);
-
-	auto error = cudaMemcpy(host_grid, grid, N * N * sizeof(char), cudaMemcpyDeviceToHost);
 }

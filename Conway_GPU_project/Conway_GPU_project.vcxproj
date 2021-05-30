@@ -80,7 +80,9 @@
     </CudaCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="src\ConwayTable.cpp" />
+    <ClCompile Include="src\ConwayTable.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\Conway-cpu-parallelize\conway_cpu_parallel\include\time_meas.hpp" />
