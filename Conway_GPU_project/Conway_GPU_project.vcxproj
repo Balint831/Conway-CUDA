@@ -87,7 +87,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\Conway-cpu-parallelize\conway_cpu_parallel\include\time_meas.hpp" />
     <ClInclude Include="cudaHelperFunctions.cuh" />
-    <ClInclude Include="include\ConwayTable.h" />
+    <ClInclude Include="include\ConwayTable.hpp" />
   </ItemGroup>
   <ItemGroup>
     <CudaCompile Include="kernel.cu" />

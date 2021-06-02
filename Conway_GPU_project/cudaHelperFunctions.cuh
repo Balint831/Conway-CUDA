@@ -2,14 +2,12 @@
 #include "cuda_runtime.h"
 #include "cuda.h"
 
-dim3 dimGrid(1, 1);
-dim3 dimBlock(6, 6);
-
 
 __device__ void increaseNeighbourCount(char* neighGrid2, int y, int x, int N)
 {
 	int xleft, xright, yabove, ybelow;
 
+	//the reason for this section is that the modulo operation in C++ is a mess
 	xleft = (x == 0) ? N - 1 : x - 1;
 	xright = (x == (N - 1)) ? 0 : x + 1;
 
@@ -59,7 +57,7 @@ __global__ void initNeigh(int N, char* grid, char* neighGrid)
 	char neighCount = 0;
 	int xleft, xright, yabove, ybelow;
 
-	//the reason for this section is that the modulo operation in C++ is a mess
+	
 	xleft = (x == 0) ?			N - 1 : x - 1;
 	xright = (x == (N - 1)) ?	0 : x + 1;
 
@@ -70,12 +68,12 @@ __global__ void initNeigh(int N, char* grid, char* neighGrid)
 	neighCount += grid[N * yabove + x];
 	neighCount += grid[N * yabove + xright];
 
-	neighCount += grid[y, xleft];
-	neighCount += grid[y, xright];
+	neighCount += grid[N * y + xleft];
+	neighCount += grid[N * y + xright];
 
-	neighCount += grid[ybelow, xleft];
-	neighCount += grid[ybelow, x];
-	neighCount += grid[ybelow, xright];
+	neighCount += grid[N * ybelow + xleft];
+	neighCount += grid[N * ybelow + x];
+	neighCount += grid[N * ybelow + xright];
 
 	neighGrid[y * N + x] = neighCount;
 }
@@ -83,12 +81,13 @@ __global__ void initNeigh(int N, char* grid, char* neighGrid)
 
 __global__ void oneCell(int N, char* grid, char* neighGrid, char* neighGrid2)
 {
+	
 	int y = blockIdx.y * blockDim.y + threadIdx.y;
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
 
 	
-	if (y < N && x < N) // I dont want to run more threads, than the size of the grid
-	{
+	//if (y < N && x < N) // I don't want to run more threads, than the size of the Conway table
+	//{
 		if (grid[y * N + x] == 0) //check if the cell is dead
 		{
 			//if the cell is dead and it has 3 living neighbours, make it alive
@@ -108,5 +107,5 @@ __global__ void oneCell(int N, char* grid, char* neighGrid, char* neighGrid2)
 				decreaseNeighbourCount( neighGrid2, y, x, N );
 			}
 		}
-	}
+	//}
 }
