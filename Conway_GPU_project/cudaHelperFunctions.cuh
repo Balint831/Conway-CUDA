@@ -1,10 +1,15 @@
 ﻿#include "device_launch_parameters.h" //bunch of define directives
-#include "cuda_runtime.h"
+#include "cuda_runtime_api.h"
 #include "cuda.h"
 
 
+__device__ void copyGrid(char* grid, char* grid2)
+{
 
-__global__ void oneCell(int N, char* grid, char* grid2)
+}
+
+
+__global__ void oneCell(int N, char* grid, char* grid2, char* neighGrid)
 {
 	
 	int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -31,10 +36,12 @@ __global__ void oneCell(int N, char* grid, char* grid2)
 		neighCount += grid[N * ybelow + x];
 		neighCount += grid[N * ybelow + xright];
 
+		neighGrid[N * y + x] = neighCount;
 	
 	
 		if (grid[N * y + x] == 0 && (neighCount == 3)) { grid2[N * y + x] = 1; }
 
 		if (grid[N * y + x] == 1 && ((neighCount != 3) && (neighCount != 2))) { grid2[N * y + x] = 0; }
+
 	}
 }
