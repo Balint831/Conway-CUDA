@@ -27,24 +27,36 @@ int main()
 	dim3 dimBlock(5, 5);*/
 
 
-	// Glider
-	std::vector<char> v = { 0,0,0,0,0,0,0,0,0,0,
-							0,0,1,0,0,0,0,0,0,0,
-							0,0,0,1,0,0,0,0,0,0,
-							0,1,1,1,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,0,0,0,
-							0,0,0,0,0,0,0,0,0,0 };
-	int n = 10;
+	// Gliders
+	std::vector<char> v = { 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+								0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+								0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+								0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+								0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+								0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+								0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+								0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+								0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+								0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+								0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+								0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+								0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+								0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+								0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+								0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+								0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+								0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+								0,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+								0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+	};
+
+	int n = 20;
 	
-	dim3 dimGrid(32,32);
-	dim3 dimBlock(32, 32);
-	/*int n = 1024;
-	std::vector<char> v = fillVector(0.5, n);*/
+	dim3 dimGrid(2,2);
+	dim3 dimBlock(10, 10);
+	//int n = 1024;
+
+	//std::vector<char> v = fillVector(0.5, n);
 	
 	
 	
@@ -52,8 +64,6 @@ int main()
 	char* grid = nullptr; //Conway table, from which the actual state of the cell is read
 
 	char* grid2= nullptr; // A table where the new state of the cells is written
-
-	char* neighGrid = nullptr;
 	
 
 	// Allocating memory on the device 
@@ -62,29 +72,31 @@ int main()
 	err = cudaMalloc((void**)&grid2, n * n * sizeof(char));
 	if (err != cudaSuccess) { std::cout << "Error allocating CUDA memory: " << cudaGetErrorString(err) << "\n"; return -1; }
 	
-	err = cudaMalloc((void**)&neighGrid, n * n * sizeof(char));
-	if (err != cudaSuccess) { std::cout << "Error allocating CUDA memory: " << cudaGetErrorString(err) << "\n"; return -1; }
-
+	
 	// Copying data from the host to the device
 	err = cudaMemcpy(grid, v.data(), n * n * sizeof(char), cudaMemcpyHostToDevice);
 	if (err != cudaSuccess) { std::cout << "Error copying memory to device: " << cudaGetErrorString(err) << "\n"; return -1; }
+	
+	err = cudaMemcpy(grid2, grid, n * n * sizeof(char), cudaMemcpyDeviceToDevice);
+	if (err != cudaSuccess) { std::cout << "Error copying memory on device: " << cudaGetErrorString(err) << "\n"; return -1; }
 
 	
 
-	std::ofstream f_output("cnw_gpu_visu.txt");
+	//std::ofstream f_output("cnw_gpu_visu.txt");
+	std::ofstream times("gpu_runtimes.txt");
 
 	std::cout << "Now, we startin'" << std::endl;
 
 	// Creating CUDA events so that time can be measured on the device side
 	cudaEvent_t evt[2];
-	float milliseconds; //elapsed time between two steps
+	float milliseconds = 0; //elapsed time between two steps
 	for (auto& e : evt)
 	{
 		auto cudaStatus = cudaEventCreate(&e);
 		if (cudaStatus != cudaSuccess) { std::cout << "Error creating event: " << cudaGetErrorString(cudaStatus) << "\n"; return -1; }
 	}
 
-	for (int a = 0; a < 1; ++a)
+	for (int a = 0; a < 60; ++a)
 	{
 		auto cudaStatus = cudaEventRecord(evt[0]);
 
@@ -92,14 +104,14 @@ int main()
 		cudaEventRecord(evt[0]);
 
 			// Starting threads to step ahead in time 
-			oneCell<<<dimGrid, dimBlock>>>(n, grid, grid2, neighGrid);
+			oneCell<<<dimGrid, dimBlock>>>(n, grid, grid2);
 			err = cudaGetLastError();
 			if (err != cudaSuccess) { std::cout << "CUDA error in kernel call: " << cudaGetErrorString(err) << "\n"; return -1; }
 		
 
 			// Handing the new grid to the "read only" variable
-			//err = cudaMemcpy(grid, grid2, n * n * sizeof(char), cudaMemcpyDeviceToDevice);
-			//if (err != cudaSuccess) { std::cout << "Error copying memory on device: " << cudaGetErrorString(err) << "\n"; return -1; }
+			err = cudaMemcpy(grid, grid2, n * n * sizeof(char), cudaMemcpyDeviceToDevice);
+			if (err != cudaSuccess) { std::cout << "Error copying memory on device: " << cudaGetErrorString(err) << "\n"; return -1; }
 	
 		cudaEventRecord(evt[1]);
 		
@@ -112,7 +124,7 @@ int main()
 		cudaEventElapsedTime(&milliseconds, evt[0], evt[1]);
 		std::cout << milliseconds << std::endl;
 		printGrid(v, n);
-		//write_grid(v, n, f_output);
+		//writeGrid(v, n, f_output);
 		
 		
 		

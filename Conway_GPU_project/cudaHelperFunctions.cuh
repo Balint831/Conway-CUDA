@@ -9,7 +9,7 @@ __device__ void copyGrid(char* grid, char* grid2)
 }
 
 
-__global__ void oneCell(int N, char* grid, char* grid2, char* neighGrid)
+__global__ void oneCell(int N, char* grid, char* grid2)
 {
 	
 	int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -35,13 +35,11 @@ __global__ void oneCell(int N, char* grid, char* grid2, char* neighGrid)
 		neighCount += grid[N * ybelow + xleft];
 		neighCount += grid[N * ybelow + x];
 		neighCount += grid[N * ybelow + xright];
-
-		neighGrid[N * y + x] = neighCount;
 	
 	
-		if (grid[N * y + x] == 0 && (neighCount == 3)) { grid2[N * y + x] = 1; }
+		if ((grid[N * y + x] == 0) && (neighCount == 3)) { grid2[N * y + x] = 1; }
 
-		if (grid[N * y + x] == 1 && ((neighCount != 3) && (neighCount != 2))) { grid2[N * y + x] = 0; }
+		if ((grid[N * y + x] == 1) && ((neighCount != 3) && (neighCount != 2))) { grid2[N * y + x] = 0; }
 
 	}
 }
