@@ -3,109 +3,38 @@
 #include "cuda.h"
 
 
-__device__ void increaseNeighbourCount(char* neighGrid2, int y, int x, int N)
-{
-	int xleft, xright, yabove, ybelow;
 
-	//the reason for this section is that the modulo operation in C++ is a mess
-	xleft = (x == 0) ? N - 1 : x - 1;
-	xright = (x == (N - 1)) ? 0 : x + 1;
-
-	yabove = (y == 0) ? N - 1 : y - 1;
-	ybelow = (y == (N - 1)) ? 0 : y + 1;
-
-	neighGrid2[xleft + N * yabove]	+= 1;
-	neighGrid2[x + N * yabove]		+= 1;
-	neighGrid2[xright + N * yabove] += 1;
-
-	neighGrid2[xleft + N * y]		+= 1;
-	neighGrid2[xright + N * y]		+= 1;
-
-	neighGrid2[xleft + N * ybelow]	+= 1;
-	neighGrid2[x + N * ybelow]		+= 1;
-	neighGrid2[xright + N * ybelow] += 1;
-}
-
-
-__device__ void decreaseNeighbourCount(char* neighGrid2, int y, int x, int N)
-{
-	int xleft, xright, yabove, ybelow;
-
-	xleft = (x == 0) ? N - 1 : x - 1;
-	xright = (x == (N - 1)) ? 0 : x + 1;
-
-	yabove = (y == 0) ? N - 1 : y - 1;
-	ybelow = (y == (N - 1)) ? 0 : y + 1;
-
-	neighGrid2[xleft + N * yabove]	-= 1;
-	neighGrid2[x + N * yabove]		-= 1;
-	neighGrid2[xright + N * yabove] -= 1;
-
-	neighGrid2[xleft + N * y]		-= 1;
-	neighGrid2[xright + N * y]		-= 1;
-
-	neighGrid2[xleft + N * ybelow]	-= 1;
-	neighGrid2[x + N * ybelow]		-= 1;
-	neighGrid2[xright + N * ybelow] -= 1;
-}
-
-__global__ void initNeigh(int N, char* grid, char* neighGrid)
-{
-	int y = blockIdx.y * blockDim.y + threadIdx.y;
-	int x = blockIdx.x * blockDim.x + threadIdx.x;
-
-	char neighCount = 0;
-	int xleft, xright, yabove, ybelow;
-
-	
-	xleft = (x == 0) ?			N - 1 : x - 1;
-	xright = (x == (N - 1)) ?	0 : x + 1;
-
-	yabove = (y == 0) ?			N - 1 : y - 1;
-	ybelow = (y == (N - 1)) ?	0 : y + 1;
-
-	neighCount += grid[N * yabove + xleft];
-	neighCount += grid[N * yabove + x];
-	neighCount += grid[N * yabove + xright];
-
-	neighCount += grid[N * y + xleft];
-	neighCount += grid[N * y + xright];
-
-	neighCount += grid[N * ybelow + xleft];
-	neighCount += grid[N * ybelow + x];
-	neighCount += grid[N * ybelow + xright];
-
-	neighGrid[y * N + x] = neighCount;
-}
-
-
-__global__ void oneCell(int N, char* grid, char* neighGrid, char* neighGrid2)
+__global__ void oneCell(int N, char* grid, char* grid2)
 {
 	
 	int y = blockIdx.y * blockDim.y + threadIdx.y;
 	int x = blockIdx.x * blockDim.x + threadIdx.x;
+	if (y < N && x < N) // I don't want to run more threads, than the size of the Conway table
+	{
+
+		char neighCount = 0;
+
+		int xleft = (x == 0) ? N - 1 : x - 1;
+		int xright = (x == (N - 1)) ? 0 : x + 1;
+
+		int yabove = (y == 0) ? N - 1 : y - 1;
+		int ybelow = (y == (N - 1)) ? 0 : y + 1;
+
+		neighCount += grid[N * yabove + xleft];
+		neighCount += grid[N * yabove + x];
+		neighCount += grid[N * yabove + xright];
+
+		neighCount += grid[N * y + xleft];
+		neighCount += grid[N * y + xright];
+
+		neighCount += grid[N * ybelow + xleft];
+		neighCount += grid[N * ybelow + x];
+		neighCount += grid[N * ybelow + xright];
 
 	
-	//if (y < N && x < N) // I don't want to run more threads, than the size of the Conway table
-	//{
-		if (grid[y * N + x] == 0) //check if the cell is dead
-		{
-			//if the cell is dead and it has 3 living neighbours, make it alive
-			if (neighGrid[y * N + x] == 3)
-			{
-				grid[y * N + x] = 1;
-				increaseNeighbourCount( neighGrid2, y, x, N );
-			}
-		}
+	
+		if (grid[N * y + x] == 0 && (neighCount == 3)) { grid2[N * y + x] = 1; }
 
-		else //the cell is alive
-		{
-			// if the cell is alive and it has neither 2 nor 3 living neighbours, let it die
-			if ((neighGrid[y * N + x] != 3) && (neighGrid[y * N + x] != 2))
-			{
-				grid[y * N + x] = 0;
-				decreaseNeighbourCount( neighGrid2, y, x, N );
-			}
-		}
-	//}
+		if (grid[N * y + x] == 1 && ((neighCount != 3) && (neighCount != 2))) { grid2[N * y + x] = 0; }
+	}
 }
