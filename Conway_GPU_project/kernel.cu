@@ -62,7 +62,7 @@ int main()
 		std::vector<char> v = fillVector(0.5, n);
 		times << n << ",";
 
-		dim3 dimGrid(200, 200);
+		dim3 dimGrid(200, 200); // static_cast<int>(std::ceil(N/32)
 		dim3 dimBlock(32, 32);
 
 
@@ -106,7 +106,7 @@ int main()
 			auto cudaStatus = cudaEventRecord(evt[0]);
 
 
-			cudaEventRecord(evt[0]);
+			//cudaEventRecord(evt[0]);
 
 			// Starting threads to step ahead in time 
 			oneCell << <dimGrid, dimBlock >> > (n, grid, grid2);
@@ -128,7 +128,7 @@ int main()
 			cudaEventSynchronize(evt[1]);
 			cudaEventElapsedTime(&milliseconds, evt[0], evt[1]);
 			std::cout << milliseconds << std::endl;
-			times << milliseconds << ",";
+			//times << milliseconds << ",";
 			//printGrid(v, n);
 			//writeGrid(v, n, f_output);
 
@@ -137,9 +137,9 @@ int main()
 
 
 		}
-		times << std::endl;
+		//times << std::endl;
 
-		for (auto& e : evt) { cudaEventDestroy(e); }
+		for (auto& e : evt) { cudaEventDestroy(e); } // to 
 
 		// Copying the data back to the host
 		err = cudaMemcpy(v.data(), grid, n * n * sizeof(char), cudaMemcpyDeviceToHost);

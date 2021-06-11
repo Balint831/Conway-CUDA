@@ -3,10 +3,6 @@
 #include "cuda.h"
 
 
-__device__ void copyGrid(char* grid, char* grid2)
-{
-
-}
 
 
 __global__ void oneCell(int N, char* grid, char* grid2)
